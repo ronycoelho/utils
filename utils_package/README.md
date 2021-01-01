@@ -2,3 +2,5 @@
 
 [ribge](https://github.com/tbrugz/ribge) - package for (down)loading data from IBGE (Instituto Brasileiro de Geografia e Estatística)
 
+[brmap](https://github.com/italocegatta/brmap) - Polígonos de unidades territoriais do Brasil em R Simple Feature
+
