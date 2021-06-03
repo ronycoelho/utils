@@ -1,0 +1,18 @@
+```{r}
+library(dplyr)
+```
+
+
+```{r}
+dummy_df <- data.frame(gender_vector = c("Male", "Female", "Female", "Male", "Male"),
+                          color_vector = c('blue', 'red', 'green', 'white', 'black')
+)
+
+dados <- data.frame(x = sample(seq(0,100), 100, replace = T),
+                    y = sample(seq(0,10), 100, replace = T),
+                    valor = sample(seq(-10,10), 100, replace = T))
+
+dt <- data.frame(col.1 = c("São Paulo", "Goiás", "Maranhão"),
+                 col.2 = c("Sim", "Não", "Abstenção"),
+                 col.3 = c("José", "João", "Simão"))
+```
