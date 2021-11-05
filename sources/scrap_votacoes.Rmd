@@ -1,0 +1,92 @@
+# 04de novembro de 2021
+
+# Scrape para votacoes nominais no site da Câmara
+
+Passos: 1 - Identificar o link da votação nominal e criar a string link
+
+Rodar todas as funções. Deve retornar um data.frame de 5 colunas, com as votações individuais dos deputados e a orientação partidária;
+
+# Como funciona?
+  - A primeira função capta os votos parlamentares num objeto temporário
+  - A segunda capta a orientação partidária num objeto temporário
+  - A terceira junta os objetos temporários e retorna a base completa
+
+# Bibliotecas
+```{r}
+library(rvest)
+library(tidyverse)
+library(purrr)  
+```
+
+# Funções
+```{r}
+#link <- "https://www.camara.leg.br/presenca-comissoes/votacao-portal?reuniao=63898"
+
+link <- "https://www.camara.leg.br/presenca-comissoes/votacao-portal?reuniao=63837&itemVotacao=10268"
+
+########################################################
+########################################################
+votos.parlamentares <- 
+  
+  function(link){
+  html <- rvest::read_html(link)
+  html %>% html_nodes("div.titulares") %>%
+  html_nodes("li") %>% 
+#https://stackoverflow.com/questions/52650604/scraping-li-elements-with-rvest  
+  map_df(~{
+    data_frame(
+      parlamentar = html_node(.x, "span.nome") %>% html_text(trim=TRUE),
+      partido = html_node(.x, "span.nomePartido") %>% html_text(trim=TRUE),
+      voto = html_node(.x, "span.votou") %>% html_text(trim=TRUE),
+      
+    )
+}) %>% 
+  mutate(voto = str_remove(voto, "-votou"),
+         partido = str_remove(partido, "\\("),
+         partido = str_remove(partido, "\\)")) %>% 
+  separate(partido, sep = "-", into = c("partido", "estado"))
+  
+  
+}  
+
+########################################################
+########################################################
+orientacao.partidaria <- 
+  
+  function(link){
+  html <- rvest::read_html(link)
+  html %>% html_nodes("div.containerVotos") %>%
+  html_nodes("li") %>% 
+#https://stackoverflow.com/questions/52650604/scraping-li-elements-with-rvest  
+  map_df(~{
+    data_frame(
+      partido = html_node(.x, "span.lideranca") %>% html_text(trim=TRUE),
+      orientacao.partido = html_node(.x, "span.voto") %>% html_text(trim=TRUE),
+      
+    )
+})}
+
+########################################################
+########################################################
+
+votos.orientacao <- function(link){
+    votos.temp <- votos.parlamentares(link = link)
+
+    orientacao.temp <- orientacao.partidaria(link = link)
+
+    votos.temp %>% left_join(orientacao.temp)
+    }
+
+########################################################
+########################################################
+(votos.orientacao.df <- votos.orientacao(link = link))
+```
+
+# Verificar
+```{r}
+votos.orientacao.df %>% 
+  count(voto) %>% 
+  drop_na() %>% 
+  janitor::adorn_totals()
+```
+
