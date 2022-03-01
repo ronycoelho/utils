@@ -1,0 +1,92 @@
+link 1: https://cleitonotavio058.medium.com/usando-spark-r-para-analisar-os-microdados-do-aux%C3%ADlio-emergencial-f2019f896915
+
+link 2: https://www.youtube.com/watch?v=J4X-1wVh2sI&ab_channel=EduardoOgasawara
+
+link 3: https://www.youtube.com/watch?v=gDBBV32PcjY
+
+
+
+```{r}
+pacman::p_load(tidyverse, arrow, sparklyr, readxl)
+```
+
+- Baixados dados do auxilio emergencial. https://www.portaltransparencia.gov.br/download-de-dados/auxilio-emergencial
+- Arquivo csv descompactado - 96 MB - Janeiro 2021
+- Arquivo de dezembro de 2020 - 11,7 GB
+
+```{r}
+setwd("D:/dados")
+#options(spark.install.dir = "C:\\sparklyr")
+#spark_install()
+spark_installed_versions()
+```
+
+```{r}
+spark_conn <- sparklyr::spark_connect(master = "local")
+
+spark_connection_is_open(spark_conn)
+```
+
+```{r}
+df <- spark_read_csv(
+  sc = spark_conn,
+  name = "df",
+  path = "202012_AuxilioEmergencial.csv", 
+  delimiter = ";",
+  charset = "Latin1",
+  memory = F
+)
+
+```
+
+
+```{r}
+mun <- df %>% 
+  filter(!is.na(CADIGO_MUNICAPIO_IBGE)) %>% 
+  group_by(CADIGO_MUNICAPIO_IBGE) %>% 
+  summarise(total = n()) %>% 
+  collect()
+  
+head <- df %>% 
+  head() %>% 
+  collect()
+
+head %>% glimpse()
+
+sum(mun$total) 
+
+mun %>% 
+  arrange(desc(total))
+
+df %>% 
+  count(ENQUADRAMENTO) 
+```
+
+```{r}
+spark_disconnect(spark_conn)
+```
+
+```{r}
+system("java -version")
+
+packageVersion("sparklyr")
+```
+
+```{r}
+iris <- iris
+```
+
+
+```{r}
+s_iris <- copy_to(spark_conn, iris, overwrite = T)
+spark_web(spark_conn)
+```
+ 
+```{r}
+library(dplyr)
+
+dplyr::count(s_iris)
+
+dplyr::count(df)
+```
+
